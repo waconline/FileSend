@@ -12,6 +12,7 @@
 #endregion
 
 using System;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -28,6 +29,7 @@ namespace FileSendServer
             IPAddress ipAddress = ipHostInfo.AddressList[0];
             IPEndPoint localEndPoint = new IPEndPoint(ipAddress, 4423);
             Socket listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            BinaryReader binReader = new BinaryReader(File.Open("1.jpg",FileMode.Open));
             Console.WriteLine("Hello,i am server");
             try
             {
@@ -47,6 +49,24 @@ namespace FileSendServer
                             byte[] bytes = new byte[1024];
                             int bytesRec = connectedClientSocket.Receive(bytes);
                             data = Encoding.ASCII.GetString(bytes, 0, bytesRec);
+                            if (data.Equals("file"))
+                            {
+                                Console.WriteLine("Sending file");
+                                FileInfo fInfo = new FileInfo("1.jpg");
+                                Console.WriteLine("file size {0}", fInfo.Length);
+                                connectedClientSocket.Send(BitConverter.GetBytes(fInfo.Length));
+                                
+                                byte[] fileChunk = new byte[1];
+                                while (binReader.BaseStream.Position!=binReader.BaseStream.Length)
+                                {
+                                    fileChunk = binReader.ReadBytes(1);
+                                    connectedClientSocket.Send(fileChunk);
+                                }
+                                //connectedClientSocket.Send(Encoding.ASCII.GetBytes("TransOff"));
+                                //Console.WriteLine("File Sended");
+                                data = "";
+                            }
+                                
                             Console.WriteLine(data);
                         }
                     }
