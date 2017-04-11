@@ -5,7 +5,7 @@
 // Project [FileSendClient]
 // Filename [Program.cs]
 // Created  [11/04/2017 at 15:28]
-// Clean up [11/04/2017 at 15:48]
+// Clean up [11/04/2017 at 22:45]
 // "we are circle 9. we are not retarded 
 //  what we lack in brains we have in brawn"
 
@@ -14,7 +14,6 @@
 using System;
 using System.IO;
 using System.Net;
-using System.Net.Http;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -24,6 +23,7 @@ namespace FileSendClient
     public class ReqestException : Exception
     {
         public string Message;
+
         public ReqestException(string msg)
         {
             Message = msg;
@@ -32,6 +32,23 @@ namespace FileSendClient
 
     internal class Program
     {
+        public static string Request(string request, Socket socket)
+        {
+            try
+            {
+                socket.Send(Encoding.ASCII.GetBytes(request));
+                byte[] responsBytes = new byte[512];
+                int recived = socket.Receive(responsBytes);
+                string respons = Encoding.ASCII.GetString(responsBytes);
+                if (respons.Equals(":Wrong_req:")) throw new ReqestException("Wrong request");
+                return respons;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+        }
 
         public static bool RequestFile(string filename, Socket socket, out long fileSize)
         {
@@ -61,26 +78,39 @@ namespace FileSendClient
                 throw;
             }
         }
-
-        public static string Request(string request, Socket socket)
+       
+        public static bool DownloadFile(string filename, Socket socket)
         {
-            try
+            long fileSize;
+            //bool status = RequestFile(filename, socket, out fileSize);
+            //Console.WriteLine(status);
+            if (!RequestFile(filename, socket, out fileSize)) return false;
+            //Console.WriteLine(fileSize);
+            BinaryWriter writer = new BinaryWriter(File.Open(filename, FileMode.Create));
+            long totalRecived = 0;
+            Thread thread = new Thread(() => PercentShow(fileSize, ref totalRecived));
+            thread.Start();
+            while (totalRecived != fileSize)
             {
-                socket.Send(Encoding.ASCII.GetBytes(request));
-                byte[] responsBytes = new byte[512];
-                int recived = socket.Receive(responsBytes);
-                string respons = Encoding.ASCII.GetString(responsBytes);
-                if (respons.Equals(":Wrong_req:")) throw new ReqestException("Wrong request");
-                return respons;
+                byte[] fileChunk = new byte[1];
+                int recived = socket.Receive(fileChunk);
+                totalRecived += recived;
+                writer.Write(fileChunk);
             }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
+            thread.Abort();
+            writer.Close();
+            return true;
         }
 
-        public static void PercentShow(ref long total, ref  long cur)
+        public static void ClearCurrentConsoleLine()
+        {
+            int currentLineCursor = Console.CursorTop;
+            Console.SetCursorPosition(0, Console.CursorTop);
+            Console.Write(new string(' ', Console.WindowWidth));
+            Console.SetCursorPosition(0, currentLineCursor);
+        }
+
+        public static void PercentShow(long total, ref long cur)
         {
             try
             {
@@ -96,36 +126,6 @@ namespace FileSendClient
             catch (Exception e)
             {
             }
-        }
-        public static bool DownloadFile(string filename, Socket socket)
-        {
-            long fileSize;
-            //bool status = RequestFile(filename, socket, out fileSize);
-            //Console.WriteLine(status);
-            if (!RequestFile(filename, socket, out fileSize)) return false;
-            //Console.WriteLine(fileSize);
-            BinaryWriter writer = new BinaryWriter(File.Open(filename, FileMode.Create));
-            long totalRecived = 0;
-            Thread thread = new Thread(() => PercentShow(ref fileSize,ref totalRecived));
-            thread.Start();
-            while (totalRecived != fileSize)
-            {
-                byte[] fileChunk = new byte[1];
-                int recived = socket.Receive(fileChunk);
-                totalRecived += recived;
-                writer.Write(fileChunk);               
-            }
-            thread.Abort();
-            writer.Close();
-            return true;
-        }
-
-        public static void ClearCurrentConsoleLine()
-        {
-            int currentLineCursor = Console.CursorTop;
-            Console.SetCursorPosition(0, Console.CursorTop);
-            Console.Write(new string(' ', Console.WindowWidth));
-            Console.SetCursorPosition(0, currentLineCursor);
         }
 
         private static void Main(string[] args)
@@ -143,11 +143,11 @@ namespace FileSendClient
 
                 while (!toSendString.Equals("exit"))
                 {
-                    toSendString = Console.ReadLine();                                        
+                    toSendString = Console.ReadLine();
                     if (toSendString.Equals("file"))
-                    {                      
+                    {
                         Console.WriteLine("Recive file");
-                        bool status = DownloadFile("1.jpg",sender);
+                        bool status = DownloadFile("1.jpg", sender);
                         Console.WriteLine(status);
                         //byte[] filesize = new byte[8];
                         //int recived = sender.Receive(filesize);
@@ -172,6 +172,5 @@ namespace FileSendClient
                 Console.WriteLine(e);
             }
         }
-
     }
 }
