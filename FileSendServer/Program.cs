@@ -54,8 +54,7 @@ namespace FileSendServer
                                 Console.WriteLine("Sending file");
                                 FileInfo fInfo = new FileInfo("1.jpg");
                                 Console.WriteLine("file size {0}", fInfo.Length);
-                                connectedClientSocket.Send(BitConverter.GetBytes(fInfo.Length));
-                                
+                                connectedClientSocket.Send(BitConverter.GetBytes(fInfo.Length));                              
                                 byte[] fileChunk = new byte[1];
                                 while (binReader.BaseStream.Position!=binReader.BaseStream.Length)
                                 {

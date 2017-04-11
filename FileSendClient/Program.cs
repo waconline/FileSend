@@ -42,16 +42,16 @@ namespace FileSendClient
                     {
                         
                         Console.WriteLine("Recive file");
-                        byte[] filesize = new byte[4];
+                        byte[] filesize = new byte[8];
                         int recived = sender.Receive(filesize);
-                        Console.WriteLine("file size {0} : {1}", BitConverter.ToInt32(filesize, 0), recived);
+                        Console.WriteLine("file size {0} : {1}", BitConverter.ToInt64(filesize, 0), recived);
                         int totalRevived = 0;
-                        while (totalRevived == BitConverter.ToInt32(filesize, 0))
+                        while (totalRevived != BitConverter.ToInt32(filesize, 0))
                         {
                             byte[] fileChunk = new byte[1];                           
                             recived = sender.Receive(fileChunk);
                             totalRevived += recived;
-                            Console.WriteLine(recived+" : "+totalRevived);
+                            //Console.WriteLine(recived+" : "+totalRevived);
                             writer.Write(fileChunk);                     
                         }
                         writer.Close();
