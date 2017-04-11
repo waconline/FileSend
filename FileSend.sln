@@ -4,6 +4,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileSendServer", "FileSendServer\FileSendServer.csproj", "{14BA627E-0F0A-4512-BDB6-31A2566D242D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1A771C9B-5BDF-4798-AECB-B366670B6BCA} = {1A771C9B-5BDF-4798-AECB-B366670B6BCA}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileSendClient", "FileSendClient\FileSendClient.csproj", "{1A771C9B-5BDF-4798-AECB-B366670B6BCA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +20,10 @@ Global
 		{14BA627E-0F0A-4512-BDB6-31A2566D242D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{14BA627E-0F0A-4512-BDB6-31A2566D242D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{14BA627E-0F0A-4512-BDB6-31A2566D242D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A771C9B-5BDF-4798-AECB-B366670B6BCA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A771C9B-5BDF-4798-AECB-B366670B6BCA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A771C9B-5BDF-4798-AECB-B366670B6BCA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A771C9B-5BDF-4798-AECB-B366670B6BCA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
