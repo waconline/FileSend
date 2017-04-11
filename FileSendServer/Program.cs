@@ -49,8 +49,11 @@ namespace FileSendServer
                             byte[] bytes = new byte[1024];
                             int bytesRec = connectedClientSocket.Receive(bytes);
                             data = Encoding.ASCII.GetString(bytes, 0, bytesRec);
-                            if (data.Equals("file"))
+                            if (data.Equals(":File_req:"))
                             {
+                                byte[] responsBytes = new byte[512];
+                                Array.Copy(Encoding.ASCII.GetBytes(":File_fnd:"),responsBytes, Encoding.ASCII.GetBytes(":File_fnd:").Length);
+                                connectedClientSocket.Send(responsBytes);
                                 Console.WriteLine("Sending file");
                                 FileInfo fInfo = new FileInfo("1.jpg");
                                 Console.WriteLine("file size {0}", fInfo.Length);
