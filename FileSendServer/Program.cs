@@ -16,11 +16,13 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using Diploma;
 
 namespace FileSendServer
 {
     internal class Program
     {
+        private const int FILE_CHUNK_SIZE = 1024;
         private static void Main(string[] args)
         {
 #pragma warning disable 618
@@ -29,7 +31,7 @@ namespace FileSendServer
             IPAddress ipAddress = ipHostInfo.AddressList[0];
             IPEndPoint localEndPoint = new IPEndPoint(ipAddress, 4423);
             Socket listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            BinaryReader binReader = new BinaryReader(File.Open("1.jpg",FileMode.Open));
+            BinaryReader binReader = new BinaryReader(File.Open("2.jpg",FileMode.Open));
             Console.WriteLine("Hello,i am server");
             try
             {
@@ -55,14 +57,15 @@ namespace FileSendServer
                                 Array.Copy(Encoding.ASCII.GetBytes(":File_fnd:"),responsBytes, Encoding.ASCII.GetBytes(":File_fnd:").Length);
                                 connectedClientSocket.Send(responsBytes);
                                 Console.WriteLine("Sending file");
-                                FileInfo fInfo = new FileInfo("1.jpg");
+                                FileInfo fInfo = new FileInfo("2.jpg");
                                 Console.WriteLine("file size {0}", fInfo.Length);
                                 connectedClientSocket.Send(BitConverter.GetBytes(fInfo.Length));                              
-                                byte[] fileChunk = new byte[1];
+                                byte[] fileChunk = new byte[FILE_CHUNK_SIZE];
                                 while (binReader.BaseStream.Position!=binReader.BaseStream.Length)
                                 {
-                                    fileChunk = binReader.ReadBytes(1);
+                                    fileChunk = binReader.ReadBytes(FILE_CHUNK_SIZE);
                                     connectedClientSocket.Send(fileChunk);
+                                   
                                 }
                                 //connectedClientSocket.Send(Encoding.ASCII.GetBytes("TransOff"));
                                 //Console.WriteLine("File Sended");

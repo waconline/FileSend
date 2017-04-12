@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileSendServer", "FileSendS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileSendClient", "FileSendClient\FileSendClient.csproj", "{1A771C9B-5BDF-4798-AECB-B366670B6BCA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Diploma", "Diploma\Diploma.csproj", "{EBA3A22A-00A3-4B9F-8D7A-A5CAC13AEF59}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,6 +26,10 @@ Global
 		{1A771C9B-5BDF-4798-AECB-B366670B6BCA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1A771C9B-5BDF-4798-AECB-B366670B6BCA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1A771C9B-5BDF-4798-AECB-B366670B6BCA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EBA3A22A-00A3-4B9F-8D7A-A5CAC13AEF59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EBA3A22A-00A3-4B9F-8D7A-A5CAC13AEF59}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EBA3A22A-00A3-4B9F-8D7A-A5CAC13AEF59}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EBA3A22A-00A3-4B9F-8D7A-A5CAC13AEF59}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
