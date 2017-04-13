@@ -5,18 +5,15 @@
 // Project [FileSendClient]
 // Filename [Program.cs]
 // Created  [11/04/2017 at 15:28]
-// Clean up [11/04/2017 at 22:45]
+// Clean up [13/04/2017 at 18:36]
 // "we are circle 9. we are not retarded 
 //  what we lack in brains we have in brawn"
 
 #endregion
 
 using System;
-using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading;
 using Diploma;
 
 namespace FileSendClient
