@@ -1,5 +1,4 @@
 ﻿#region file header
-
 // Username []
 // Sln [FileSend]
 // Project [FileSendClient]
@@ -8,7 +7,6 @@
 // Clean up [13/04/2017 at 18:36]
 // "we are circle 9. we are not retarded 
 //  what we lack in brains we have in brawn"
-
 #endregion
 
 using System;
@@ -17,16 +15,7 @@ using System.Net.Sockets;
 using Diploma;
 
 namespace FileSendClient
-{
-    public class ReqestException : Exception
-    {
-        public string Message;
-
-        public ReqestException(string msg)
-        {
-            Message = msg;
-        }
-    }
+{ 
 
     internal class Program
     {
@@ -46,11 +35,16 @@ namespace FileSendClient
                 while (!toSendString.Equals("exit"))
                 {
                     toSendString = Console.ReadLine();
-                    if (toSendString.Equals("file"))
+                    if (toSendString.Contains("download"))
                     {
-                        Console.WriteLine("Recive file");
-                        bool status = MyFTP.DownloadFile("2.jpg", sender);
-                        Console.WriteLine("File Recived");
+                        string filename = toSendString.Split(' ')[1];
+                        Console.WriteLine("Downloading file");
+                        bool status = MyFTP.DownloadFile(filename, sender);
+                        if(status) Console.WriteLine("File downloaded");
+                        else
+                        {
+                            Console.WriteLine("Download error");
+                        }
                     }
                 }
             }

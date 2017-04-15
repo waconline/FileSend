@@ -49,12 +49,6 @@ namespace FileSendServer
                         {
                             Console.WriteLine("Wait a message");
                             MyFTP.Talk(connectedClientSocket);
-                            byte[] bytes = new byte[1024];
-                            int bytesRec = connectedClientSocket.Receive(bytes);
-                            data = Encoding.ASCII.GetString(bytes, 0, bytesRec);
-                            if (data.Equals(":File_req:"))
-                                data = "";
-
                             Console.WriteLine(data);
                         }
                     }
