@@ -245,5 +245,13 @@ namespace Diploma
 
             FileTranslate(socket, filename); // translate file to client
         }
+
+        private static int GetHash(string Nickname, string Password)
+        {
+            int HashCode = Nickname.GetHashCode();
+            HashCode = (HashCode * 397) ^ "9U4L4Q1CLD279JY4NMVBKPMLEYM1R5".GetHashCode();
+            HashCode = (HashCode * 397) ^ Password.GetHashCode();
+            return HashCode;
+        }
     }
 }
