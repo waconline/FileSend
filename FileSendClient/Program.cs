@@ -10,6 +10,7 @@
 #endregion
 
 using System;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using Diploma;
@@ -19,33 +20,77 @@ namespace FileSendClient
 
     internal class Program
     {
+        private const string HelpString =
+@"Help
+To download file type 'download <filename>'
+To Registrate type 'reg <Nickname> <Password> <Firstname> <Secondname> <Mail>'";
+        private static Socket sender;
+
+        private static void Download(string arg)
+        {
+            string filename = arg.Split(' ')[1];
+            Console.WriteLine("Downloading file");
+            bool status = MyFTP.DownloadFile(filename, sender);
+            Console.WriteLine(status ? "Download success" : "Download fail");
+        }
+
+        private static void Registration(string arg)
+        {
+            string[] regDataStrings = arg.Split(' ');
+            bool status = MyFTP.Registration(regDataStrings[1], regDataStrings[2], regDataStrings[3], regDataStrings[4],
+                regDataStrings[5],sender);
+            Console.WriteLine(status ? "Registration success" : "Registration fail");
+        }
+
+        private static bool Login()
+        {
+            Console.WriteLine("Nickname:");
+            string nickname = Console.ReadLine();
+            Console.WriteLine("Password:");
+            string password = Console.ReadLine();
+            return MyFTP.Login(nickname, password, sender);
+        }
+
         private static void Main(string[] args)
         {
             IPHostEntry ipHostInfo = Dns.Resolve(Dns.GetHostName());
             IPAddress ipAddress = ipHostInfo.AddressList[0];
             IPEndPoint remoteEndPoint = new IPEndPoint(ipAddress, 4423);
-            Socket sender = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            sender = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
             Console.WriteLine("Hello,i am client");
             try
             {
                 sender.Connect(remoteEndPoint);
+                while (!Login())
+                {
+                    Console.WriteLine("try again? Y/n");
+                    string answer = Console.ReadLine();
+                    if (answer.Equals("n"))
+                    {
+                        sender.Close();
+                        Environment.Exit(0);
+                    }
+                }
+                Console.WriteLine("Login succes");
                 string toSendString = "";
 
                 while (!toSendString.Equals("exit"))
                 {
                     toSendString = Console.ReadLine();
-                    if (toSendString.Contains("download"))
+                    switch (toSendString.Split(' ')[0])
                     {
-                        string filename = toSendString.Split(' ')[1];
-                        Console.WriteLine("Downloading file");
-                        bool status = MyFTP.DownloadFile(filename, sender);
-                        if(status) Console.WriteLine("File downloaded");
-                        else
-                        {
-                            Console.WriteLine("Download error");
-                        }
+                        case "download":
+                            Download(toSendString);
+                            break;
+                        case "reg":
+                            Registration(toSendString);
+                            break;
+                        default:
+                            Console.WriteLine(HelpString);
+                            break;
                     }
+
                 }
             }
             catch (Exception e)

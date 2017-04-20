@@ -2,10 +2,10 @@
 
 // Username []
 // Sln [FileSend]
-// Project [DBoperate]
-// Filename [Program.cs]
-// Created  [18/04/2017 at 10:52]
-// Clean up [18/04/2017 at 21:50]
+// Project [Diploma]
+// Filename [DataBaseOperator.cs]
+// Created  [20/04/2017 at 18:22]
+// Clean up [20/04/2017 at 18:38]
 // "we are circle 9. we are not retarded 
 //  what we lack in brains we have in brawn"
 
@@ -15,14 +15,14 @@ using System;
 using System.Data;
 using Oracle.ManagedDataAccess.Client;
 
-namespace DBoperate
+namespace Diploma
 {
     public class DataBaseOperator : IDisposable
     {
-        private const string connectionString = "DATA SOURCE=XE;PASSWORD=4423;USER ID = SOUNDBASE";
+        // private string connectionString = "DATA SOURCE=XE;PASSWORD=4423;USER ID = SOUNDBASE";
         private readonly OracleConnection connection;
 
-        public DataBaseOperator()
+        public DataBaseOperator(string connectionString)
         {
             connection = new OracleConnection(connectionString);
             connection.Open();
@@ -87,7 +87,7 @@ namespace DBoperate
             return HashCode;
         }
 
-        public void Registration(string Nickname, string Password, string Fname, string Sname, string Mail)
+        public bool Registration(string Nickname, string Password, string Fname, string Sname, string Mail)
         {
             try
             {
@@ -148,10 +148,12 @@ namespace DBoperate
                     command.Parameters.Add(userMailParameter);
                     command.ExecuteNonQuery();
                 }
+                return true;
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
+                return false;
             }
         }
 
@@ -162,56 +164,38 @@ namespace DBoperate
                 using (OracleCommand command = new OracleCommand())
                 {
                     command.Connection = connection;
-                    command.CommandType = CommandType.Text;
-                    command.CommandText = @"SELECT U_PASSW FROM USR WHERE U_NICKNAME = :outer_nickname";
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.CommandText = "LOGIN";
 
                     #region parameters 
 
                     OracleParameter userNicknameParameter = new OracleParameter
                     {
-                        ParameterName = "outer_nickname",
+                        ParameterName = "P_NICKNAME",
                         Direction = ParameterDirection.Input,
                         OracleDbType = OracleDbType.Varchar2,
                         Value = Nickname
                     };
 
+                    OracleParameter userPasswordParameter = new OracleParameter
+                    {
+                        ParameterName = "P_PASSW",
+                        Direction = ParameterDirection.Input,
+                        OracleDbType = OracleDbType.Varchar2,
+                        Value = Password
+                    };
                     #endregion
 
                     command.Parameters.Add(userNicknameParameter);
-                    OracleDataReader reader = command.ExecuteReader();
-                    reader.Read();
-                    string passwFromBase = reader.GetString(0);
-                    reader.Close();
-                    return passwFromBase.Equals(Password);
+                    command.Parameters.Add(userPasswordParameter);
+                    command.ExecuteNonQuery();
+                    return true;
                 }
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
                 return false;
-            }
-        }
-    }
-
-    internal class Program
-    {
-        private static int GetHash(string Nickname, string Password)
-        {
-            int HashCode = Nickname.GetHashCode();
-            HashCode = (HashCode * 397) ^ "9U4L4Q1CLD279JY4NMVBKPMLEYM1R5".GetHashCode();
-            HashCode = (HashCode * 397) ^ Password.GetHashCode();
-            return HashCode;
-        }
-
-        private static void Main(string[] args)
-        {
-            using (DataBaseOperator DBoperator = new DataBaseOperator())
-            {
-                string passHash = GetHash("UserTest", "Userpass").ToString();
-                DBoperator.Registration("UserTest",passHash,"UserTestname","Usertestsname","Usertestmail");
-                //DBoperator.UpdateUserDownloads("ULTROwaka");
-                //DBoperator.Login("ULTROwaka", passHash);
-                Console.ReadKey();
             }
         }
     }

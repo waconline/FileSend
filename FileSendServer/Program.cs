@@ -5,7 +5,7 @@
 // Project [FileSendServer]
 // Filename [Program.cs]
 // Created  [11/04/2017 at 15:28]
-// Clean up [13/04/2017 at 18:36]
+// Clean up [20/04/2017 at 18:38]
 // "we are circle 9. we are not retarded 
 //  what we lack in brains we have in brawn"
 
@@ -14,7 +14,6 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using Diploma;
 
 namespace FileSendServer

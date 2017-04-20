@@ -1,12 +1,14 @@
 ﻿#region file header
+
 // Username []
 // Sln [FileSend]
 // Project [Diploma]
 // Filename [MyFTP.cs]
 // Created  [12/04/2017 at 10:51]
-// Clean up [14/04/2017 at 22:49]
+// Clean up [20/04/2017 at 18:37]
 // "we are circle 9. we are not retarded 
 //  what we lack in brains we have in brawn"
+
 #endregion
 
 using System;
@@ -19,17 +21,23 @@ namespace Diploma
 {
     public enum RequestsEnum : long
     {
+        Reg_req,
+        Login_req,
         File_req,
         Info_req,
         File_info_req
     }
 
-    public enum ResponsEnum : long
+    public enum ResponseEnum : long
     {
         Ready,
         File_fnd,
         File_nfnd,
-        Wrong_req
+        Wrong_req,
+        Login_suc,
+        Login_fail,
+        Reg_suc,
+        Reg_fail
     }
 
     public class ReqestException : Exception
@@ -54,18 +62,18 @@ namespace Diploma
         /// <param name="request">request which will be sended through socket</param>
         /// <param name="socket">socket with respons server</param>
         /// <returns>return <long> code of respons </returns>
-        private static ResponsEnum Request(RequestsEnum request, Socket socket)
+        private static ResponseEnum Request(RequestsEnum request, Socket socket)
         {
             try
             {
                 socket.Send(BitConverter.GetBytes((long) request));
-                byte[] responsBytes = new byte[8];
-                int recived = socket.Receive(responsBytes);
-                long respons = BitConverter.ToInt64(responsBytes, 0);
-                if ((ResponsEnum)respons == ResponsEnum.Wrong_req) throw new ReqestException("Wrong request", request);
-                
-                return (ResponsEnum)respons;
+                byte[] responseBytes = new byte[8];
+                int recived = socket.Receive(responseBytes);
+                long response = BitConverter.ToInt64(responseBytes, 0);
+                if ((ResponseEnum) response == ResponseEnum.Wrong_req)
+                    throw new ReqestException("Wrong request", request);
 
+                return (ResponseEnum) response;
             }
             catch (Exception e)
             {
@@ -88,12 +96,13 @@ namespace Diploma
             try
             {
                 byte[] recivedBytes = new byte[8]; // long
-                if (Request(RequestsEnum.File_req, socket) != ResponsEnum.Ready) return false;
+                if (Request(RequestsEnum.File_req, socket) != ResponseEnum.Ready) return false;
                 socket.Send(Encoding.ASCII.GetBytes(filename));
                 int recived = socket.Receive(recivedBytes);
 
                 //Console.WriteLine("recived resp {0}", BitConverter.ToInt64(recivedBytes, 0));
-                if (recived < 8 || (ResponsEnum)BitConverter.ToInt64(recivedBytes, 0) != ResponsEnum.File_fnd) return false;
+                if (recived < 8 || (ResponseEnum) BitConverter.ToInt64(recivedBytes, 0) != ResponseEnum.File_fnd)
+                    return false;
                 recived = socket.Receive(recivedBytes);
                 fileSize = BitConverter.ToInt64(recivedBytes, 0);
 
@@ -112,7 +121,7 @@ namespace Diploma
         }
 
         /// <summary>
-        /// Запрашивает файл и начинает его скачивание
+        ///     Запрашивает файл и начинает его скачивание
         /// </summary>
         /// <param name="filename">Имя файла, который нужно скачать</param>
         /// <param name="socket">Сокет </param>
@@ -174,15 +183,21 @@ namespace Diploma
             byte[] requestBytes = new byte[8];
             socket.Receive(requestBytes);
             long request = BitConverter.ToInt64(requestBytes, 0);
-            Respons((RequestsEnum)request, socket);
+            Response((RequestsEnum) request, socket);
         }
 
-        private static void Respons(RequestsEnum request, Socket socket)
+        private static void Response(RequestsEnum request, Socket socket)
         {
             switch (request)
             {
                 case RequestsEnum.File_req:
-                    ResponsOnFileReq(socket);
+                    ResponseOnFileReq(socket);
+                    break;
+                case RequestsEnum.Reg_req:
+                    ResponseOnRegistration(socket);
+                    break;
+                case RequestsEnum.Login_req:
+                    ResponseOnLogin(socket);
                     break;
             }
         }
@@ -205,7 +220,7 @@ namespace Diploma
             Console.WriteLine("complite translate {0} to {1}, sended: {2}", filename, socket, totalSended);
         }
 
-        private static ResponsEnum FileSearch(string filename)
+        private static ResponseEnum FileSearch(string filename)
         {
             try
             {
@@ -215,33 +230,33 @@ namespace Diploma
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                return  ResponsEnum.File_nfnd;
+                return ResponseEnum.File_nfnd;
             }
             Console.WriteLine("{0} find", filename);
-            return ResponsEnum.File_fnd;
+            return ResponseEnum.File_fnd;
         }
 
-        private static ResponsEnum PrepToTranslateFile()
+        private static ResponseEnum PrepToTranslateFile()
         {
             //Console.WriteLine("ready");
-            return  ResponsEnum.Ready;
+            return ResponseEnum.Ready;
         }
 
-        private static void ResponsOnFileReq(Socket socket)
+        private static void ResponseOnFileReq(Socket socket)
         {
-            ResponsEnum status;
+            ResponseEnum status;
 
             status = PrepToTranslateFile();
-            socket.Send(BitConverter.GetBytes((long)status)); // ready to send file resp
-            if (status != ResponsEnum.Ready) return;
+            socket.Send(BitConverter.GetBytes((long) status)); // ready to send file resp
+            if (status != ResponseEnum.Ready) return;
 
             byte[] fileNameRaw = new byte[512];
             socket.Receive(fileNameRaw); //receive file name  
             string filename = Encoding.ASCII.GetString(fileNameRaw).TrimEnd('\0');
 
             status = FileSearch(filename);
-            socket.Send(BitConverter.GetBytes((long)status)); //Found file resp
-            if (status != ResponsEnum.File_fnd) return;
+            socket.Send(BitConverter.GetBytes((long) status)); //Found file resp
+            if (status != ResponseEnum.File_fnd) return;
 
             FileTranslate(socket, filename); // translate file to client
         }
@@ -252,6 +267,66 @@ namespace Diploma
             HashCode = (HashCode * 397) ^ "9U4L4Q1CLD279JY4NMVBKPMLEYM1R5".GetHashCode();
             HashCode = (HashCode * 397) ^ Password.GetHashCode();
             return HashCode;
+        }
+
+        public static bool Registration(string Nickname, string Passsword, string Fname, string Sname, string Mail,
+            Socket socket)
+        {
+            string passwordHash = GetHash(Nickname, Passsword).ToString();
+            string singleString = $"{Nickname},{passwordHash},{Fname},{Sname},{Mail}";
+            socket.Send(BitConverter.GetBytes((long) RequestsEnum.Reg_req));
+            socket.Send(Encoding.ASCII.GetBytes(singleString));
+            byte[] responseBytes = new byte[8];
+            int recived = socket.Receive(responseBytes);
+            long respons = BitConverter.ToInt64(responseBytes, 0);
+            return (ResponseEnum) respons == ResponseEnum.Reg_suc;
+        }
+
+        private static void ResponseOnRegistration(Socket socket)
+        {
+            byte[] resivedBytes = new byte[512];
+            socket.Receive(resivedBytes);
+            string singleString = Encoding.ASCII.GetString(resivedBytes).TrimEnd('\0');
+            string[] regDataString = singleString.Split(',');
+            bool regStatus;
+            using (
+                DataBaseOperator DBoperator = new DataBaseOperator("DATA SOURCE=XE;PASSWORD=4423;USER ID = SOUNDBASE"))
+            {
+                regStatus = DBoperator.Registration(regDataString[0], regDataString[1], regDataString[2],
+                    regDataString[3], regDataString[4]);
+            }
+            socket.Send(regStatus
+                            ? BitConverter.GetBytes((long) ResponseEnum.Reg_suc)
+                            : BitConverter.GetBytes((long) ResponseEnum.Reg_fail));
+        }
+
+        public static bool Login(string Nickname, string Passsword, Socket socket)
+        {
+            string passwordHash = GetHash(Nickname, Passsword).ToString();
+            string singleString = $"{Nickname},{passwordHash}";
+            socket.Send(BitConverter.GetBytes((long)RequestsEnum.Login_req));
+            socket.Send(Encoding.ASCII.GetBytes(singleString));
+            byte[] responseBytes = new byte[8];
+            int recived = socket.Receive(responseBytes);
+            long respons = BitConverter.ToInt64(responseBytes, 0);
+            return (ResponseEnum)respons == ResponseEnum.Login_suc;
+        }
+
+        private static void ResponseOnLogin(Socket socket)
+        {
+            byte[] resivedBytes = new byte[512];
+            socket.Receive(resivedBytes);
+            string singleString = Encoding.ASCII.GetString(resivedBytes).TrimEnd('\0');
+            string[] loginDataString = singleString.Split(',');
+            bool loginStatus;
+            using (
+                DataBaseOperator DBoperator = new DataBaseOperator("DATA SOURCE=XE;PASSWORD=4423;USER ID = SOUNDBASE"))
+            {
+                loginStatus = DBoperator.Login(loginDataString[0], loginDataString[1]);
+            }
+            socket.Send(loginStatus
+                            ? BitConverter.GetBytes((long)ResponseEnum.Login_suc)
+                            : BitConverter.GetBytes((long)ResponseEnum.Login_fail));
         }
     }
 }
