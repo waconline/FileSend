@@ -319,8 +319,7 @@ namespace Diploma
             string singleString = Encoding.ASCII.GetString(resivedBytes).TrimEnd('\0');
             string[] loginDataString = singleString.Split(',');
             bool loginStatus;
-            using (
-                DataBaseOperator DBoperator = new DataBaseOperator("DATA SOURCE=XE;PASSWORD=4423;USER ID = SOUNDBASE"))
+            using (DataBaseOperator DBoperator = new DataBaseOperator("DATA SOURCE=XE;PASSWORD=4423;USER ID = SOUNDBASE"))
             {
                 loginStatus = DBoperator.Login(loginDataString[0], loginDataString[1]);
             }
