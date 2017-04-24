@@ -200,10 +200,39 @@ namespace Diploma
             }
         }
 
+        public long GetCountOfSound(string filter)
+        {
+            long count = 0;
+            try
+            {
+                using (OracleCommand command = new OracleCommand())
+                {
+                    command.Connection = connection;
+                    command.CommandType = CommandType.Text;
+                    command.CommandText = $"SELECT COUNT(*) FROM SOUNDLIST {filter}";
+
+                    #region parameters 
+
+                    #endregion
+
+                    using (OracleDataReader reader = command.ExecuteReader())
+                    {
+                        reader.Read();
+                        count = reader.GetInt64(0);                  
+                    }
+                    return count;
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return -1;
+            }
+        }
+
         public bool GetSoundList(string filter, out List<SoundInfo> soundlist)
         {
             soundlist = new List<SoundInfo>();
-            OracleDataReader reader;
             try
             {
                 using (OracleCommand command = new OracleCommand())
@@ -216,22 +245,23 @@ namespace Diploma
 
                     #endregion
 
-                    reader = command.ExecuteReader();
-                    
-                    while (reader.Read())
+                    using (OracleDataReader reader = command.ExecuteReader())
                     {
-                        SoundInfo row = new SoundInfo()
+                        while (reader.Read())
                         {
-                            sl_id = reader.GetDecimal(0).ToString(),
-                            sl_name = reader.GetString(1),
-                            sl_upload_date = reader.GetDateTime(2).ToString(),
-                            sl_uploader = reader.GetDecimal(3).ToString(),
-                            sl_category = reader.GetString(4),
-                            sl_hash = reader.GetString(5)
-                        };
-                        soundlist.Add(row);
+                            SoundInfo row = new SoundInfo()
+                            {
+                                sl_id = reader.GetDecimal(0).ToString(),
+                                sl_name = reader.GetString(1),
+                                sl_upload_date = reader.GetDateTime(2).ToString(),
+                                sl_uploader = reader.GetDecimal(3).ToString(),
+                                sl_category = reader.GetString(4),
+                                sl_hash = reader.GetString(6)
+                            };
+                            soundlist.Add(row);
+                        }                     
                     }
-                    reader.Dispose();
+
                     return true;
                 }
             }

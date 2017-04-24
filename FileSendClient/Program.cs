@@ -10,6 +10,7 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
@@ -45,10 +46,17 @@ To Registrate type 'reg <Nickname> <Password> <Firstname> <Secondname> <Mail>'";
         private static bool Login()
         {
             Console.WriteLine("Nickname:");
-            string nickname = Console.ReadLine();
+            string nickname = "User1";//Console.ReadLine();
             Console.WriteLine("Password:");
-            string password = Console.ReadLine();
+            string password = "123"; //Console.ReadLine();
             return MyFTP.Login(nickname, password, sender);
+        }
+
+        private static List<SoundInfo> GetInfo(string arg)
+        {
+            List<SoundInfo> soundlist;
+            MyFTP.GetSoundList(arg,sender,out soundlist);
+            return soundlist;
         }
 
         private static void Main(string[] args)
@@ -57,7 +65,7 @@ To Registrate type 'reg <Nickname> <Password> <Firstname> <Secondname> <Mail>'";
             IPAddress ipAddress = ipHostInfo.AddressList[0];
             IPEndPoint remoteEndPoint = new IPEndPoint(ipAddress, 4423);
             sender = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-
+            List<SoundInfo> soundlist;
             Console.WriteLine("Hello,i am client");
             try
             {
@@ -86,6 +94,15 @@ To Registrate type 'reg <Nickname> <Password> <Firstname> <Secondname> <Mail>'";
                         case "reg":
                             Registration(toSendString);
                             break;
+                        case "info":
+                            soundlist = GetInfo(" ");
+                            Console.WriteLine("list");
+                            foreach (SoundInfo rec in soundlist)
+                            {
+                                Console.WriteLine(rec.GetSingleString());
+                            }
+                            break;
+                            
                         default:
                             Console.WriteLine(HelpString);
                             break;

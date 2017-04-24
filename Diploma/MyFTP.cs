@@ -12,6 +12,7 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
@@ -25,7 +26,8 @@ namespace Diploma
         Login_req,
         File_req,
         Info_req,
-        File_info_req
+        File_info_req,
+        Soundlist_req
     }
 
     public enum ResponseEnum : long
@@ -199,6 +201,9 @@ namespace Diploma
                 case RequestsEnum.Login_req:
                     ResponseOnLogin(socket);
                     break;
+                case RequestsEnum.Soundlist_req:
+                    ResponseOnGetSoundList(socket);
+                    break;
             }
         }
 
@@ -315,7 +320,7 @@ namespace Diploma
         private static void ResponseOnLogin(Socket socket)
         {
             byte[] resivedBytes = new byte[512];
-            socket.Receive(resivedBytes);
+            int recived = socket.Receive(resivedBytes);
             string singleString = Encoding.ASCII.GetString(resivedBytes).TrimEnd('\0');
             string[] loginDataString = singleString.Split(',');
             bool loginStatus;
@@ -326,6 +331,46 @@ namespace Diploma
             socket.Send(loginStatus
                             ? BitConverter.GetBytes((long)ResponseEnum.Login_suc)
                             : BitConverter.GetBytes((long)ResponseEnum.Login_fail));
+        }
+
+        public static void GetSoundList(string filter, Socket socket, out List<SoundInfo> soundlist)
+        {
+            soundlist = new List<SoundInfo>();
+            socket.Send(BitConverter.GetBytes((long)RequestsEnum.Soundlist_req));
+            socket.Send(Encoding.ASCII.GetBytes(filter));
+
+            byte[] countOfSounds = new byte[8];
+            int recived = socket.Receive(countOfSounds);
+            long curCount = 0;
+            long count = BitConverter.ToInt64(countOfSounds, 0);
+            Console.WriteLine($"need {count}");
+            while (curCount != count)
+            {
+                byte[] rowBytes = new byte[1024];
+                recived = socket.Receive(rowBytes);
+                string rowSingleString  = Encoding.ASCII.GetString(rowBytes).TrimEnd('\0');
+                soundlist.Add(new SoundInfo(rowSingleString));
+                curCount++;
+            }
+        }
+
+        private static void ResponseOnGetSoundList(Socket socket)
+        {
+            byte[] filterBytes = new byte[512];
+            int recived = socket.Receive(filterBytes);
+            string filter = Encoding.ASCII.GetString(filterBytes).TrimEnd('\0');
+            using (DataBaseOperator DBoperator = new DataBaseOperator("DATA SOURCE=XE;PASSWORD=4423;USER ID = SOUNDBASE"))
+            {
+                socket.Send(BitConverter.GetBytes(DBoperator.GetCountOfSound(filter)));
+                List<SoundInfo> soundlist = new List<SoundInfo>();
+                DBoperator.GetSoundList(filter, out soundlist);
+                foreach (SoundInfo row in soundlist)
+                {
+                    byte[] rowBytes = new byte[1024];
+                    Array.Copy(Encoding.ASCII.GetBytes(row.GetSingleString()),rowBytes, Encoding.ASCII.GetBytes(row.GetSingleString()).Length);
+                    socket.Send(rowBytes);
+                }
+            }
         }
     }
 }

@@ -37,11 +37,12 @@ namespace DBoperate
             List<SoundInfo> info;
             using (DataBaseOperator DBoperator = new DataBaseOperator("DATA SOURCE=XE;PASSWORD=4423;USER ID = SOUNDBASE"))
             {
-                DBoperator.GetSoundList("WHERE SL_ID = SL_ID", out info);
+               Console.WriteLine(DBoperator.GetCountOfSound("")); 
+                DBoperator.GetSoundList("", out info);
             }
             foreach (SoundInfo rec in info)
             {
-                Console.WriteLine(rec.sl_name);
+                Console.WriteLine(rec.GetSingleString());
             }
             Console.ReadLine();
         }
