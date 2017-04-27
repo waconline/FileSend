@@ -98,7 +98,8 @@ namespace Diploma
             try
             {
                 byte[] recivedBytes = new byte[8]; // long
-                if (Request(RequestsEnum.File_req, socket) != ResponseEnum.Ready) return false;
+                socket.Send(BitConverter.GetBytes((long)RequestsEnum.File_req));
+                // if (Request(RequestsEnum.File_req, socket) != ResponseEnum.Ready) return false;
                 socket.Send(Encoding.ASCII.GetBytes(filename));
                 int recived = socket.Receive(recivedBytes);
 
@@ -251,9 +252,9 @@ namespace Diploma
         {
             ResponseEnum status;
 
-            status = PrepToTranslateFile();
-            socket.Send(BitConverter.GetBytes((long) status)); // ready to send file resp
-            if (status != ResponseEnum.Ready) return;
+            //status = PrepToTranslateFile();
+            //socket.Send(BitConverter.GetBytes((long) status)); // ready to send file resp
+            //if (status != ResponseEnum.Ready) return;
 
             byte[] fileNameRaw = new byte[512];
             socket.Receive(fileNameRaw); //receive file name  
@@ -324,10 +325,14 @@ namespace Diploma
             string singleString = Encoding.ASCII.GetString(resivedBytes).TrimEnd('\0');
             string[] loginDataString = singleString.Split(',');
             bool loginStatus;
-            using (DataBaseOperator DBoperator = new DataBaseOperator("DATA SOURCE=XE;PASSWORD=4423;USER ID = SOUNDBASE"))
+            using (var client = new DBServiceReference.DataBaseOperatorClient("NetTcpBinding_IDataBaseOperator"))
             {
-                loginStatus = DBoperator.Login(loginDataString[0], loginDataString[1]);
+                loginStatus = client.Login(loginDataString[0], loginDataString[1]);
             }
+            //using (DataBaseOperator DBoperator = new DataBaseOperator("DATA SOURCE=XE;PASSWORD=4423;USER ID = SOUNDBASE"))
+            //{
+            //    loginStatus = DBoperator.Login(loginDataString[0], loginDataString[1]);
+            //}
             socket.Send(loginStatus
                             ? BitConverter.GetBytes((long)ResponseEnum.Login_suc)
                             : BitConverter.GetBytes((long)ResponseEnum.Login_fail));

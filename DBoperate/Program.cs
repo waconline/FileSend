@@ -14,7 +14,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using Diploma;
+using System.ServiceModel;
 using Oracle.ManagedDataAccess.Client;
 
 
@@ -34,17 +34,10 @@ namespace DBoperate
 
         private static void Main(string[] args)
         {
-            List<SoundInfo> info;
-            using (DataBaseOperator DBoperator = new DataBaseOperator("DATA SOURCE=XE;PASSWORD=4423;USER ID = SOUNDBASE"))
+            using (var host = new ServiceHost(typeof(DataBaseService)))
             {
-               Console.WriteLine(DBoperator.GetCountOfSound("")); 
-                DBoperator.GetSoundList("", out info);
+                
             }
-            foreach (SoundInfo rec in info)
-            {
-                Console.WriteLine(rec.GetSingleString());
-            }
-            Console.ReadLine();
         }
     }
 }
